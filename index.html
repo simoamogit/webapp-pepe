@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .mode-btn.active {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .connection-code {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.success {
+            background: #4CAF50;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .notification.warning {
+            background: #ff9800;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐱 Pet Monitor</h1>
+            <p>Monitora il tuo gatto a distanza</p>
+        </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" id="receiverMode">📱 Dispositivo Principale</button>
+            <button class="mode-btn" id="transmitterMode">📷 Dispositivo Casa</button>
+        </div>
+        
+        <!-- Modalità Ricevitore (Dispositivo Principale) -->
+        <div id="receiverPanel" class="panel">
+            <h2>💻 Dispositivo Principale - Visualizzazione</h2>
+            
+            <div class="input-group">
+                <label for="connectionCode">Codice di Connessione:</label>
+                <input type="text" id="connectionCode" placeholder="Inserisci il codice del dispositivo casa">
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="connectBtn">Connetti al Dispositivo Casa</button>
+                <button class="btn btn-danger hidden" id="disconnectBtn">Disconnetti</button>
+            </div>
+            
+            <div class="status disconnected" id="connectionStatus">
+                ❌ Non connesso
+            </div>
+            
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline></video>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" id="screenshotBtn">📸 Screenshot</button>
+            </div>
+        </div>
+        
+        <!-- Modalità Trasmettitore (Dispositivo Casa) -->
+        <div id="transmitterPanel" class="panel hidden">
+            <h2>🏠 Dispositivo Casa - Trasmissione</h2>
+            
+            <div class="connection-code" id="deviceCode">
+                Codice: <span id="generatedCode">Generazione in corso...</span>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="startTransmissionBtn">📡 Avvia Trasmissione</button>
+                <button class="btn btn-danger hidden" id="stopTransmissionBtn">⏹️ Ferma Trasmissione</button>
+            </div>
+            
+            <div class="status disconnected" id="transmissionStatus">
+                ⏹️ Trasmissione ferma
+            </div>
+            
+            <div class="video-container">
+                <video id="localVideo" autoplay playsinline muted></video>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" id="switchCameraBtn">🔄 Cambia Camera</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        class PetMonitor {
+            constructor() {
+                this.isTransmitter = false;
+                this.localStream = null;
+                this.remoteStream = null;
+                this.peerConnection = null;
+                this.socket = null;
+                this.deviceCode = null;
+                this.roomCode = null;
+                this.isConnected = false;
+                
+                this.configuration = {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                };
+                
+                this.initializeUI();
+                this.setupWebSocket();
+            }
+            
+            initializeUI() {
+                // Mode switching
+                document.getElementById('receiverMode').addEventListener('click', () => {
+                    this.switchMode(false);
+                });
+                
+                document.getElementById('transmitterMode').addEventListener('click', () => {
+                    this.switchMode(true);
+                });
+                
+                // Receiver controls
+                document.getElementById('connectBtn').addEventListener('click', () => {
+                    this.connectToDevice();
+                });
+                
+                document.getElementById('disconnectBtn').addEventListener('click', () => {
+                    this.disconnect();
+                });
+                
+                document.getElementById('screenshotBtn').addEventListener('click', () => {
+                    this.takeScreenshot();
+                });
+                
+                // Transmitter controls
+                document.getElementById('startTransmissionBtn').addEventListener('click', () => {
+                    this.startTransmission();
+                });
+                
+                document.getElementById('stopTransmissionBtn').addEventListener('click', () => {
+                    this.stopTransmission();
+                });
+                
+                document.getElementById('switchCameraBtn').addEventListener('click', () => {
+                    this.switchCamera();
+                });
+            }
+            
+            setupWebSocket() {
+                this.socket = io();
+                
+                this.socket.on('connect', () => {
+                    console.log('Connesso al server');
+                    this.generateDeviceCode();
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('Disconnesso dal server');
+                    this.showNotification('Connessione al server persa', 'error');
+                });
+                
+                this.socket.on('registered', (data) => {
+                    console.log('Registrato come:', data.role);
+                    if (data.role === 'sender') {
+                        this.updateTransmissionStatus('connected', '📡 In attesa di connessioni...');
+                    }
+                });
+                
+                this.socket.on('signal', async (data) => {
+                    await this.handleSignal(data);
+                });
+                
+                this.socket.on('sender-disconnected', () => {
+                    this.showNotification('Dispositivo casa disconnesso', 'warning');
+                    this.disconnect();
+                });
+                
+                this.socket.on('error', (message) => {
+                    this.showNotification(message, 'error');
+                    this.updateConnectionStatus('disconnected', '❌ Errore di connessione');
+                });
+            }
+            
+            generateDeviceCode() {
+                this.deviceCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                document.getElementById('generatedCode').textContent = this.deviceCode;
+            }
+            
+            switchMode(isTransmitter) {
+                this.isTransmitter = isTransmitter;
+                
+                // Update UI
+                document.getElementById('receiverMode').classList.toggle('active', !isTransmitter);
+                document.getElementById('transmitterMode').classList.toggle('active', isTransmitter);
+                
+                document.getElementById('receiverPanel').classList.toggle('hidden', isTransmitter);
+                document.getElementById('transmitterPanel').classList.toggle('hidden', !isTransmitter);
+                
+                // Stop any ongoing streams
+                this.cleanup();
+            }
+            
+            async connectToDevice() {
+                const code = document.getElementById('connectionCode').value.trim().toUpperCase();
+                if (!code) {
+                    this.showNotification('Inserisci un codice di connessione', 'error');
+                    return;
+                }
+                
+                this.roomCode = code;
+                this.updateConnectionStatus('connecting', '🔄 Connessione in corso...');
+                
+                try {
+                    // Registra come receiver
+                    this.socket.emit('register', { role: 'receiver', roomCode: this.roomCode });
+                    
+                    // Setup peer connection
+                    await this.setupPeerConnection();
+                    
+                    // Crea offer
+                    const offer = await this.peerConnection.createOffer();
+                    await this.peerConnection.setLocalDescription(offer);
+                    
+                    // Invia offer al sender
+                    this.socket.emit('signal', {
+                        type: 'offer',
+                        sdp: offer
+                    });
+                    
+                    this.updateConnectionStatus('connecting', '🔄 In attesa di risposta...');
+                    
+                } catch (error) {
+                    console.error('Errore nella connessione:', error);
+                    this.updateConnectionStatus('disconnected', '❌ Errore di connessione');
+                    this.showNotification('Errore di connessione: ' + error.message, 'error');
+                }
+            }
+            
+            async startTransmission() {
+                try {
+                    // Ottieni stream dalla camera
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'environment'
+                        },
+                        audio: true
+                    });
+                    
+                    const localVideo = document.getElementById('localVideo');
+                    localVideo.srcObject = this.localStream;
+                    
+                    // Registra come sender
+                    this.roomCode = this.deviceCode;
+                    this.socket.emit('register', { role: 'sender', roomCode: this.roomCode });
+                    
+                    this.updateTransmissionStatus('connected', '📡 Trasmissione attiva');
+                    this.showNotification('Trasmissione avviata!', 'success');
+                    
+                    document.getElementById('startTransmissionBtn').classList.add('hidden');
+                    document.getElementById('stopTransmissionBtn').classList.remove('hidden');
+                    
+                } catch (error) {
+                    console.error('Errore nell\'avvio della trasmissione:', error);
+                                        this.showNotification('Errore nell\'accesso ai media: ' + error.message, 'error');
+                }
+            }
+            
+            async setupPeerConnection() {
+                this.peerConnection = new RTCPeerConnection(this.configuration);
+                
+                this.peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        this.socket.emit('signal', {
+                            type: 'ice-candidate',
+                            candidate: event.candidate
+                        });
+                    }
+                };
+                
+                this.peerConnection.ontrack = (event) => {
+                    console.log('Stream ricevuto dal peer');
+                    const remoteVideo = document.getElementById('remoteVideo');
+                    remoteVideo.srcObject = event.streams[0];
+                    this.remoteStream = event.streams[0];
+                    
+                    this.updateConnectionStatus('connected', '✅ Connesso al dispositivo casa');
+                    this.showNotification('Connessione stabilita!', 'success');
+                    
+                    document.getElementById('connectBtn').classList.add('hidden');
+                    document.getElementById('disconnectBtn').classList.remove('hidden');
+                };
+                
+                this.peerConnection.onconnectionstatechange = () => {
+                    console.log('Stato connessione:', this.peerConnection.connectionState);
+                    
+                    if (this.peerConnection.connectionState === 'connected') {
+                        this.isConnected = true;
+                    } else if (this.peerConnection.connectionState === 'disconnected' || 
+                               this.peerConnection.connectionState === 'failed') {
+                        this.isConnected = false;
+                        if (!this.isTransmitter) {
+                            this.updateConnectionStatus('disconnected', '❌ Connessione persa');
+                        }
+                    }
+                };
+                
+                // Se siamo il sender e abbiamo già lo stream, aggiungilo
+                if (this.isTransmitter && this.localStream) {
+                    this.localStream.getTracks().forEach(track => {
+                        this.peerConnection.addTrack(track, this.localStream);
+                    });
+                }
+            }
+            
+            async handleSignal(data) {
+                if (!this.peerConnection) {
+                    await this.setupPeerConnection();
+                }
+                
+                try {
+                    if (data.type === 'offer') {
+                        console.log('Offer ricevuto');
+                        
+                        // Se siamo il sender, aggiungi il nostro stream prima di rispondere
+                        if (this.isTransmitter && this.localStream) {
+                            this.localStream.getTracks().forEach(track => {
+                                this.peerConnection.addTrack(track, this.localStream);
+                            });
+                        }
+                        
+                        await this.peerConnection.setRemoteDescription(data.sdp);
+                        
+                        const answer = await this.peerConnection.createAnswer();
+                        await this.peerConnection.setLocalDescription(answer);
+                        
+                        this.socket.emit('signal', {
+                            type: 'answer',
+                            sdp: answer
+                        });
+                        
+                    } else if (data.type === 'answer') {
+                        console.log('Answer ricevuto');
+                        await this.peerConnection.setRemoteDescription(data.sdp);
+                        
+                    } else if (data.type === 'ice-candidate') {
+                        console.log('ICE candidate ricevuto');
+                        await this.peerConnection.addIceCandidate(data.candidate);
+                    }
+                } catch (error) {
+                    console.error('Errore nel signaling:', error);
+                    this.showNotification('Errore nella comunicazione', 'error');
+                }
+            }
+            
+            stopTransmission() {
+                this.cleanup();
+                
+                this.updateTransmissionStatus('disconnected', '⏹️ Trasmissione ferma');
+                this.showNotification('Trasmissione fermata', 'warning');
+                
+                document.getElementById('startTransmissionBtn').classList.remove('hidden');
+                document.getElementById('stopTransmissionBtn').classList.add('hidden');
+            }
+            
+            disconnect() {
+                this.cleanup();
+                
+                this.updateConnectionStatus('disconnected', '❌ Non connesso');
+                this.showNotification('Disconnesso dal dispositivo', 'warning');
+                
+                document.getElementById('connectBtn').classList.remove('hidden');
+                document.getElementById('disconnectBtn').classList.add('hidden');
+            }
+            
+            cleanup() {
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = null;
+                }
+                
+                if (this.remoteStream) {
+                    this.remoteStream.getTracks().forEach(track => track.stop());
+                    this.remoteStream = null;
+                }
+                
+                if (this.peerConnection) {
+                    this.peerConnection.close();
+                    this.peerConnection = null;
+                }
+                
+                const localVideo = document.getElementById('localVideo');
+                const remoteVideo = document.getElementById('remoteVideo');
+                localVideo.srcObject = null;
+                remoteVideo.srcObject = null;
+                
+                this.isConnected = false;
+            }
+            
+            async switchCamera() {
+                if (!this.localStream) return;
+                
+                try {
+                    const videoTrack = this.localStream.getVideoTracks()[0];
+                    const currentFacingMode = videoTrack.getSettings().facingMode;
+                    
+                    // Cambia tra camera frontale e posteriore
+                    const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                    
+                    const newStream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: newFacingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: true
+                    });
+                    
+                    // Sostituisci il track nel peer connection
+                    if (this.peerConnection) {
+                        const sender = this.peerConnection.getSenders().find(s => 
+                            s.track && s.track.kind === 'video'
+                        );
+                        if (sender) {
+                            await sender.replaceTrack(newStream.getVideoTracks()[0]);
+                        }
+                    }
+                    
+                    // Ferma il vecchio stream
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = newStream;
+                    
+                    const localVideo = document.getElementById('localVideo');
+                    localVideo.srcObject = newStream;
+                    
+                    this.showNotification('📷 Camera cambiata', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore nel cambio camera:', error);
+                    this.showNotification('Errore nel cambio camera', 'error');
+                }
+            }
+            
+            takeScreenshot() {
+                const video = document.getElementById('remoteVideo');
+                if (!video.srcObject) {
+                    this.showNotification('Nessun video da catturare', 'error');
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pet-screenshot-${new Date().toISOString()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                this.showNotification('📸 Screenshot salvato', 'success');
+            }
+            
+            updateConnectionStatus(status, message) {
+                const statusEl = document.getElementById('connectionStatus');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = message;
+            }
+            
+            updateTransmissionStatus(status, message) {
+                const statusEl = document.getElementById('transmissionStatus');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = message;
+            }
+            
+            showNotification(message, type = 'success') {
+                // Rimuovi notifiche esistenti
+                const existingNotifications = document.querySelectorAll('.notification');
+                existingNotifications.forEach(n => n.remove());
+                
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Rimuovi dopo 3 secondi
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+        
+        // Inizializza l'applicazione
+        document.addEventListener('DOMContentLoaded', () => {
+            const petMonitor = new PetMonitor();
+            
+            // Gestione orientamento per mobile
+            if (screen.orientation) {
+                screen.orientation.addEventListener('change', () => {
+                    setTimeout(() => {
+                        const videos = document.querySelectorAll('video');
+                        videos.forEach(video => {
+                            if (video.srcObject) {
+                                video.style.width = '100%';
+                                video.style.height = 'auto';
+                            }
+                        });
+                    }, 100);
+                });
+            }
+            
+            // Gestione stato connessione di rete
+            window.addEventListener('online', () => {
+                petMonitor.showNotification('🌐 Connessione ripristinata', 'success');
+            });
+            
+            window.addEventListener('offline', () => {
+                petMonitor.showNotification('🌐 Connessione persa', 'error');
+            });
+            
+            // Previeni spegnimento schermo
+            let wakeLock = null;
+            const requestWakeLock = async () => {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Wake lock attivato');
+                    }
+                } catch (err) {
+                    console.log('Wake lock non supportato:', err);
+                }
+            };
+            
+            document.getElementById('startTransmissionBtn').addEventListener('click', requestWakeLock);
+            document.getElementById('connectBtn').addEventListener('click', requestWakeLock);
+        });
+    </script>
+</body>
+</html>
