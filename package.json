@@ -1,0 +1,29 @@
+{
+  "name": "pet-monitor",
+  "version": "1.0.0",
+  "description": "Applicazione per monitoraggio remoto di animali domestici",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "pet",
+    "monitor",
+    "webrtc",
+    "video",
+    "streaming"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
