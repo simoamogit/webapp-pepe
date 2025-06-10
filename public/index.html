@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .mode-btn.active {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .mode-btn:hover {
+            transform: scale(1.02);
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #1976D2;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .device-setup {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .device-setup {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .volume-slider {
+            width: 100px;
+        }
+        
+        .connection-code {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .advanced-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .slider-group label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+        
+        .devices-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .device-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.success {
+            background: #4CAF50;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .notification.warning {
+            background: #ff9800;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐱 Pet Monitor</h1>
+            <p>Monitora il tuo gatto a distanza</p>
+        </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" id="receiverMode">📱 Dispositivo Principale</button>
+            <button class="mode-btn" id="transmitterMode">📷 Dispositivo Casa</button>
+        </div>
+        
+        <!-- Modalità Ricevitore (Dispositivo Principale) -->
+        <div id="receiverPanel" class="panel">
+            <h2>💻 Dispositivo Principale - Visualizzazione</h2>
+            
+            <div class="input-group">
+                <label for="connectionCode">Codice di Connessione:</label>
+                <input type="text" id="connectionCode" placeholder="Inserisci il codice del dispositivo casa">
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="connectBtn">
+                    <span class="loading hidden"></span>
+                    Connetti al Dispositivo Casa
+                </button>
+                <button class="btn btn-danger hidden" id="disconnectBtn">Disconnetti</button>
+            </div>
+            
+            <div class="status disconnected" id="connectionStatus">
+                ❌ Non connesso
+            </div>
+            
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline muted></video>
+            </div>
+            
+            <div class="audio-controls">
+                <button class="btn btn-secondary" id="talkBtn">🎤 Parla</button>
+                <div class="volume-control">
+                    <label>🔊 Volume:</label>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+            
+            <div class="advanced-controls">
+                <div class="slider-group">
+                    <label>🔆 Luminosità</label>
+                    <input type="range" class="slider" id="brightnessSlider" min="0" max="100" value="50">
+                </div>
+                <div class="slider-group">
+                    <label>🔍 Zoom</label>
+                    <input type="range" class="slider" id="zoomSlider" min="1" max="5" value="1" step="0.1">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" id="recordBtn">📹 Registra</button>
+                <button class="btn btn-secondary" id="screenshotBtn">📸 Screenshot</button>
+                <button class="btn btn-secondary" id="motionDetectionBtn">🎯 Rilevamento Movimento</button>
+            </div>
+            
+            <div class="devices-list">
+                <h4>Dispositivi Connessi:</h4>
+                <div id="connectedDevices"></div>
+            </div>
+        </div>
+        
+        <!-- Modalità Trasmettitore (Dispositivo Casa) -->
+        <div id="transmitterPanel" class="panel hidden">
+            <h2>🏠 Dispositivo Casa - Trasmissione</h2>
+            
+            <div class="connection-code" id="deviceCode">
+                Codice: <span id="generatedCode">Generazione in corso...</span>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="startTransmissionBtn">📡 Avvia Trasmissione</button>
+                <button class="btn btn-danger hidden" id="stopTransmissionBtn">⏹️ Ferma Trasmissione</button>
+            </div>
+            
+            <div class="status disconnected" id="transmissionStatus">
+                ⏹️ Trasmissione ferma
+            </div>
+            
+            <div class="video-container">
+                <video id="localVideo" autoplay playsinline muted></video>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-secondary" id="switchCameraBtn">🔄 Cambia Camera</button>
+                <button class="btn btn-secondary" id="toggleFlashBtn">💡 Flash</button>
+            </div>
+            
+            <div class="advanced-controls">
+                <div class="slider-group">
+                    <label>🎥 Qualità Video</label>
+                    <select id="videoQuality" class="btn btn-secondary">
+                        <option value="480p">480p (Risparmio Dati)</option>
+                        <option value="720p" selected>720p (Bilanciato)</option>
+                        <option value="1080p">1080p (Alta Qualità)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PetMonitor {
+            constructor() {
+                this.isTransmitter = false;
+                this.localStream = null;
+                this.remoteStream = null;
+                this.peerConnection = null;
+                this.socket = null;
+                this.deviceCode = null;
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+                this.motionDetection = false;
+                this.lastFrameData = null;
+                this.connectedDevices = new Set();
+                
+                this.configuration = {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ]
+                };
+                
+                this.initializeUI();
+                this.setupWebSocket();
+            }
+            
+            initializeUI() {
+                // Mode switching
+                document.getElementById('receiverMode').addEventListener('click', () => {
+                    this.switchMode(false);
+                });
+                
+                document.getElementById('transmitterMode').addEventListener('click', () => {
+                    this.switchMode(true);
+                });
+                
+                // Receiver controls
+                document.getElementById('connectBtn').addEventListener('click', () => {
+                    this.connectToDevice();
+                });
+                
+                document.getElementById('disconnectBtn').addEventListener('click', () => {
+                    this.disconnect();
+                });
+                
+                document.getElementById('talkBtn').addEventListener('mousedown', () => {
+                    this.startTalking();
+                });
+                
+                document.getElementById('talkBtn').addEventListener('mouseup', () => {
+                    this.stopTalking();
+                });
+                
+                document.getElementById('volumeSlider').addEventListener('input', (e) => {
+                    this.adjustVolume(e.target.value);
+                });
+                
+                document.getElementById('brightnessSlider').addEventListener('input', (e) => {
+                    this.adjustBrightness(e.target.value);
+                });
+                
+                document.getElementById('zoomSlider').addEventListener('input', (e) => {
+                    this.adjustZoom(e.target.value);
+                });
+                
+                document.getElementById('recordBtn').addEventListener('click', () => {
+                    this.toggleRecording();
+                });
+                
+                document.getElementById('screenshotBtn').addEventListener('click', () => {
+                    this.takeScreenshot();
+                });
+                
+                document.getElementById('motionDetectionBtn').addEventListener('click', () => {
+                    this.toggleMotionDetection();
+                });
+                
+                // Transmitter controls
+                document.getElementById('startTransmissionBtn').addEventListener('click', () => {
+                    this.startTransmission();
+                });
+                
+                document.getElementById('stopTransmissionBtn').addEventListener('click', () => {
+                    this.stopTransmission();
+                });
+                
+                document.getElementById('switchCameraBtn').addEventListener('click', () => {
+                    this.switchCamera();
+                });
+                
+                document.getElementById('toggleFlashBtn').addEventListener('click', () => {
+                    this.toggleFlashlight();
+                });
+                
+                document.getElementById('videoQuality').addEventListener('change', (e) => {
+                    this.changeVideoQuality(e.target.value);
+                });
+            }
+            
+            setupWebSocket() {
+                // Simulazione WebSocket per demo
+                // In produzione, sostituire con un vero server WebSocket
+                this.socket = {
+                    send: (data) => {
+                        console.log('Sending:', data);
+                        // Simula risposta del server
+                        setTimeout(() => {
+                            if (data.includes('join-room')) {
+                                this.handleSocketMessage({
+                                    type: 'room-joined',
+                                    code: this.deviceCode
+                                });
+                            }
+                        }, 500);
+                    },
+                    close: () => {
+                        console.log('WebSocket closed');
+                    }
+                };
+                
+                // Genera codice dispositivo
+                this.generateDeviceCode();
+            }
+            
+            generateDeviceCode() {
+                this.deviceCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                document.getElementById('generatedCode').textContent = this.deviceCode;
+            }
+            
+            switchMode(isTransmitter) {
+                this.isTransmitter = isTransmitter;
+                
+                // Update UI
+                document.getElementById('receiverMode').classList.toggle('active', !isTransmitter);
+                document.getElementById('transmitterMode').classList.toggle('active', isTransmitter);
+                
+                document.getElementById('receiverPanel').classList.toggle('hidden', isTransmitter);
+                document.getElementById('transmitterPanel').classList.toggle('hidden', !isTransmitter);
+                
+                // Stop any ongoing streams
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = null;
+                }
+            }
+            
+            async connectToDevice() {
+                const code = document.getElementById('connectionCode').value.trim();
+                if (!code) {
+                    this.showNotification('Inserisci un codice di connessione', 'error');
+                    return;
+                }
+                
+                this.updateConnectionStatus('connecting', '🔄 Connessione in corso...');
+                this.toggleLoadingButton('connectBtn', true);
+                
+                try {
+                    // Simula connessione
+                    await this.delay(2000);
+                    
+                    // Setup peer connection
+                    await this.setupPeerConnection();
+                    
+                    this.updateConnectionStatus('connected', '✅ Connesso al dispositivo casa');
+                    this.showNotification('Connessione stabilita con successo!', 'success');
+                    
+                    document.getElementById('connectBtn').classList.add('hidden');
+                    document.getElementById('disconnectBtn').classList.remove('hidden');
+                    
+                } catch (error) {
+                    this.updateConnectionStatus('disconnected', '❌ Errore di connessione');
+                    this.showNotification('Errore di connessione: ' + error.message, 'error');
+                } finally {
+                    this.toggleLoadingButton('connectBtn', false);
+                }
+            }
+            
+            async setupPeerConnection() {
+                this.peerConnection = new RTCPeerConnection(this.configuration);
+                
+                this.peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        // Invia ICE candidate tramite socket
+                        this.socket.send(JSON.stringify({
+                            type: 'ice-candidate',
+                            candidate: event.candidate
+                        }));
+                    }
+                };
+                
+                this.peerConnection.ontrack = (event) => {
+                    const remoteVideo = document.getElementById('remoteVideo');
+                    remoteVideo.srcObject = event.streams[0];
+                    this.remoteStream = event.streams[0];
+                };
+                
+                // Simula ricezione stream remoto per demo
+                setTimeout(() => {
+                    this.simulateRemoteStream();
+                }, 1000);
+            }
+            
+            async simulateRemoteStream() {
+                try {
+                    // Usa la camera locale per simulare il stream remoto (solo per demo)
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 1280, height: 720 },
+                        audio: true
+                    });
+                    
+                    const remoteVideo = document.getElementById('remoteVideo');
+                    remoteVideo.srcObject = stream;
+                    this.remoteStream = stream;
+                    
+                    // Avvia rilevamento movimento se abilitato
+                    if (this.motionDetection) {
+                        this.startMotionDetection();
+                    }
+                    
+                } catch (error) {
+                    console.error('Errore nell\'accesso ai media:', error);
+                    this.showNotification('Errore nell\'accesso alla camera', 'error');
+                }
+            }
+            
+            async startTransmission() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            width: { ideal: 1280 }, 
+                            height: { ideal: 720 },
+                            facingMode: 'environment'
+                        },
+                        audio: true
+                    });
+                    
+                    const localVideo = document.getElementById('localVideo');
+                    localVideo.srcObject = this.localStream;
+                    
+                    this.updateTransmissionStatus('connected', '📡 Trasmissione attiva');
+                    this.showNotification('Trasmissione avviata!', 'success');
+                    
+                    document.getElementById('startTransmissionBtn').classList.add('hidden');
+                    document.getElementById('stopTransmissionBtn').classList.remove('hidden');
+                    
+                } catch (error) {
+                    console.error('Errore nell\'avvio della trasmissione:', error);
+                    this.showNotification('Errore nell\'accesso ai media: ' + error.message, 'error');
+                }
+            }
+            
+            stopTransmission() {
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = null;
+                }
+                
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = null;
+                
+                this.updateTransmissionStatus('disconnected', '⏹️ Trasmissione ferma');
+                this.showNotification('Trasmissione fermata', 'warning');
+                
+                document.getElementById('startTransmissionBtn').classList.remove('hidden');
+                document.getElementById('stopTransmissionBtn').classList.add('hidden');
+            }
+            
+            disconnect() {
+                if (this.remoteStream) {
+                    this.remoteStream.getTracks().forEach(track => track.stop());
+                    this.remoteStream = null;
+                }
+                
+                if (this.peerConnection) {
+                    this.peerConnection.close();
+                    this.peerConnection = null;
+                }
+                
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = null;
+                
+                this.updateConnectionStatus('disconnected', '❌ Non connesso');
+                this.showNotification('Disconnesso dal dispositivo', 'warning');
+                
+                document.getElementById('connectBtn').classList.remove('hidden');
+                document.getElementById('disconnectBtn').classList.add('hidden');
+            }
+            
+            async startTalking() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Simula invio audio al dispositivo remoto
+                    this.showNotification('🎤 Microfono attivo', 'success');
+                } catch (error) {
+                    this.showNotification('Errore nell\'accesso al microfono', 'error');
+                }
+            }
+            
+            stopTalking() {
+                this.showNotification('🎤 Microfono disattivato', 'warning');
+            }
+            
+            adjustVolume(value) {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.volume = value / 100;
+            }
+            
+            adjustBrightness(value) {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.style.filter = `brightness(${value}%)`;
+            }
+            
+            adjustZoom(value) {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.style.transform = `scale(${value})`;
+            }
+            
+            toggleRecording() {
+                if (!this.isRecording) {
+                    this.startRecording();
+                } else {
+                    this.stopRecording();
+                }
+            }
+            
+            startRecording() {
+                if (!this.remoteStream) {
+                    this.showNotification('Nessun stream da registrare', 'error');
+                    return;
+                }
+                
+                this.recordedChunks = [];
+                this.mediaRecorder = new MediaRecorder(this.remoteStream);
+                
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.recordedChunks.push(event.data);
+                    }
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pet-monitor-${new Date().toISOString()}.webm`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+                
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                
+                document.getElementById('recordBtn').textContent = '⏹️ Ferma Registrazione';
+                document.getElementById('recordBtn').classList.remove('btn-secondary');
+                document.getElementById('recordBtn').classList.add('btn-danger');
+                
+                this.showNotification('📹 Registrazione avviata', 'success');
+            }
+            
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    
+                    document.getElementById('recordBtn').textContent = '📹 Registra';
+                    document.getElementById('recordBtn').classList.remove('btn-danger');
+                    document.getElementById('recordBtn').classList.add('btn-secondary');
+                    
+                    this.showNotification('📹 Registrazione salvata', 'success');
+                }
+            }
+            
+            takeScreenshot() {
+                const video = document.getElementById('remoteVideo');
+                if (!video.srcObject) {
+                    this.showNotification('Nessun video da catturare', 'error');
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pet-screenshot-${new Date().toISOString()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                this.showNotification('📸 Screenshot salvato', 'success');
+            }
+            
+            toggleMotionDetection() {
+                this.motionDetection = !this.motionDetection;
+                
+                const btn = document.getElementById('motionDetectionBtn');
+                if (this.motionDetection) {
+                    btn.textContent = '🔴 Stop Rilevamento';
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-danger');
+                    this.startMotionDetection();
+                    this.showNotification('🎯 Rilevamento movimento attivo', 'success');
+                } else {
+                    btn.textContent = '🎯 Rilevamento Movimento';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-secondary');
+                    this.stopMotionDetection();
+                    this.showNotification('🎯 Rilevamento movimento disattivato', 'warning');
+                }
+            }
+            
+            startMotionDetection() {
+                const video = document.getElementById('remoteVideo');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const detectMotion = () => {
+                    if (!this.motionDetection || !video.srcObject) return;
+                    
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0);
+                    
+                    const currentFrameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    if (this.lastFrameData) {
+                        const diff = this.calculateFrameDifference(this.lastFrameData, currentFrameData);
+                        if (diff > 0.1) { // Soglia movimento
+                            this.showNotification('🚨 Movimento rilevato!', 'warning');
+                            this.onMotionDetected();
+                        }
+                    }
+                    
+                    this.lastFrameData = currentFrameData;
+                    setTimeout(detectMotion, 1000); // Check ogni secondo
+                };
+                
+                detectMotion();
+            }
+            
+            calculateFrameDifference(frame1, frame2) {
+                let diff = 0;
+                const data1 = frame1.data;
+                const data2 = frame2.data;
+                
+                for (let i = 0; i < data1.length; i += 4) {
+                    const r1 = data1[i], g1 = data1[i + 1], b1 = data1[i + 2];
+                    const r2 = data2[i], g2 = data2[i + 1], b2 = data2[i + 2];
+                    
+                    diff += Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+                }
+                
+                return diff / (data1.length * 255);
+            }
+            
+            onMotionDetected() {
+                // Auto-screenshot su movimento
+                this.takeScreenshot();
+                
+                // Notifica push (simulata)
+                if ('Notification' in window) {
+                    new Notification('Pet Monitor', {
+                        body: '🐱 Il tuo gatto si sta muovendo!',
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>'
+                    });
+                }
+            }
+            
+            stopMotionDetection() {
+                this.lastFrameData = null;
+            }
+            
+            async switchCamera() {
+                if (!this.localStream) return;
+                
+                try {
+                    const videoTrack = this.localStream.getVideoTracks()[0];
+                    const constraints = videoTrack.getConstraints();
+                    
+                    // Cambia tra camera frontale e posteriore
+                    const newFacingMode = constraints.facingMode === 'user' ? 'environment' : 'user';
+                    
+                    const newStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: newFacingMode },
+                        audio: true
+                    });
+                    
+                    // Sostituisci il stream
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = newStream;
+                    
+                    const localVideo = document.getElementById('localVideo');
+                    localVideo.srcObject = newStream;
+                    
+                    this.showNotification('📷 Camera cambiata', 'success');
+                    
+                } catch (error) {
+                    this.showNotification('Errore nel cambio camera', 'error');
+                }
+            }
+            
+            async toggleFlashlight() {
+                if (!this.localStream) return;
+                
+                try {
+                    const videoTrack = this.localStream.getVideoTracks()[0];
+                    const capabilities = videoTrack.getCapabilities();
+                    
+                    if (capabilities.torch) {
+                        const currentSettings = videoTrack.getSettings();
+                        const newTorchState = !currentSettings.torch;
+                        
+                        await videoTrack.applyConstraints({
+                            advanced: [{ torch: newTorchState }]
+                        });
+                        
+                        const btn = document.getElementById('toggleFlashBtn');
+                        btn.textContent = newTorchState ? '💡 Flash ON' : '💡 Flash OFF';
+                        btn.classList.toggle('btn-primary', newTorchState);
+                        btn.classList.toggle('btn-secondary', !newTorchState);
+                        
+                        this.showNotification(`💡 Flash ${newTorchState ? 'acceso' : 'spento'}`, 'success');
+                    } else {
+                        this.showNotification('Flash non supportato su questo dispositivo', 'error');
+                    }
+                } catch (error) {
+                    this.showNotification('Errore nel controllo flash', 'error');
+                }
+            }
+            
+            async changeVideoQuality(quality) {
+                if (!this.localStream) return;
+                
+                const videoConstraints = {
+                    '480p': { width: 640, height: 480 },
+                    '720p': { width: 1280, height: 720 },
+                    '1080p': { width: 1920, height: 1080 }
+                };
+                
+                try {
+                    const newStream = await navigator.mediaDevices.getUserMedia({
+                        video: videoConstraints[quality],
+                        audio: true
+                    });
+                    
+                    this.localStream.getTracks().forEach(track => track.stop());
+                    this.localStream = newStream;
+                    
+                    const localVideo = document.getElementById('localVideo');
+                    localVideo.srcObject = newStream;
+                    
+                    this.showNotification(`🎥 Qualità cambiata a ${quality}`, 'success');
+                    
+                } catch (error) {
+                    this.showNotification('Errore nel cambio qualità', 'error');
+                }
+            }
+            
+            updateConnectionStatus(status, message) {
+                const statusEl = document.getElementById('connectionStatus');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = message;
+            }
+            
+            updateTransmissionStatus(status, message) {
+                const statusEl = document.getElementById('transmissionStatus');
+                statusEl.className = `status ${status}`;
+                statusEl.textContent = message;
+            }
+            
+            toggleLoadingButton(buttonId, loading) {
+                const btn = document.getElementById(buttonId);
+                const loadingEl = btn.querySelector('.loading');
+                
+                if (loading) {
+                    loadingEl.classList.remove('hidden');
+                    btn.disabled = true;
+                } else {
+                    loadingEl.classList.add('hidden');
+                    btn.disabled = false;
+                }
+            }
+            
+            showNotification(message, type = 'success') {
+                // Rimuovi notifiche esistenti
+                const existingNotifications = document.querySelectorAll('.notification');
+                existingNotifications.forEach(n => n.remove());
+                
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Rimuovi dopo 3 secondi
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+            
+            handleSocketMessage(message) {
+                switch (message.type) {
+                    case 'room-joined':
+                        console.log('Unito alla stanza:', message.code);
+                        break;
+                    case 'peer-connected':
+                        this.showNotification('Nuovo dispositivo connesso', 'success');
+                        this.connectedDevices.add(message.peerId);
+                        this.updateDevicesList();
+                        break;
+                    case 'peer-disconnected':
+                        this.showNotification('Dispositivo disconnesso', 'warning');
+                        this.connectedDevices.delete(message.peerId);
+                        this.updateDevicesList();
+                        break;
+                }
+            }
+            
+            updateDevicesList() {
+                const container = document.getElementById('connectedDevices');
+                container.innerHTML = '';
+                
+                if (this.connectedDevices.size === 0) {
+                    container.innerHTML = '<p style="color: #666; text-align: center;">Nessun dispositivo connesso</p>';
+                    return;
+                }
+                
+                this.connectedDevices.forEach(deviceId => {
+                    const deviceItem = document.createElement('div');
+                    deviceItem.className = 'device-item';
+                    deviceItem.innerHTML = `
+                        <span>📷 Dispositivo ${deviceId.substring(0, 8)}</span>
+                        <span style="color: #4CAF50;">🟢 Online</span>
+                    `;
+                    container.appendChild(deviceItem);
+                });
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Inizializza l'applicazione
+        document.addEventListener('DOMContentLoaded', () => {
+            // Richiedi permessi notifiche
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            
+            // Inizializza Pet Monitor
+            const petMonitor = new PetMonitor();
+            
+            // Gestione orientamento per mobile
+            if (screen.orientation) {
+                screen.orientation.addEventListener('change', () => {
+                    // Ridimensiona video quando cambia orientamento
+                    setTimeout(() => {
+                        const videos = document.querySelectorAll('video');
+                        videos.forEach(video => {
+                            if (video.srcObject) {
+                                video.style.width = '100%';
+                                video.style.height = 'auto';
+                            }
+                        });
+                    }, 100);
+                });
+            }
+            
+            // Service Worker per notifiche push (simulato)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:text/javascript,console.log("SW simulated")')
+                    .then(() => console.log('Service Worker simulato registrato'))
+                    .catch(err => console.log('Service Worker error:', err));
+            }
+            
+            // Gestione stato connessione di rete
+            window.addEventListener('online', () => {
+                petMonitor.showNotification('🌐 Connessione ripristinata', 'success');
+            });
+            
+            window.addEventListener('offline', () => {
+                petMonitor.showNotification('🌐 Connessione persa', 'error');
+            });
+            
+            // Previeni spegnimento schermo su mobile
+            let wakeLock = null;
+            const requestWakeLock = async () => {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Wake lock attivato');
+                    }
+                } catch (err) {
+                    console.log('Wake lock non supportato:', err);
+                }
+            };
+            
+            // Attiva wake lock quando si avvia la trasmissione
+            document.getElementById('startTransmissionBtn').addEventListener('click', requestWakeLock);
+            document.getElementById('connectBtn').addEventListener('click', requestWakeLock);
+        });
+    </script>
+</body>
+</html>
