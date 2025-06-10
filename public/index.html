@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Remote Monitor per il tuo Gatto</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Monitor remoto: Gattaio in Azione</h1>
+  <div id="role-selection">
+    <button id="btnSender">Trasmettitore</button>
+    <button id="btnReceiver">Ricevitore</button>
+  </div>
+
+  <div id="controls" style="display: none;">
+    <video id="video" autoplay playsinline></video>
+    <audio id="audio" autoplay></audio>
+    <div id="remote-controls" style="display: none;">
+      <button id="btnActivateCamera">Attiva Fotocamera e Microfono</button>
+      <button id="btnRemoteCommand">Invia comando remoto</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
